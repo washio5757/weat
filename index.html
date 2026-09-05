@@ -36,6 +36,30 @@
       box-shadow: 0 8px 32px 0 rgba(166, 193, 238, 0.37);
     }
 
+    /* トップへ戻るボタン（ルート相対パス対応） */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.5rem 1.2rem;
+      color: #333;
+      background: rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.7);
+      transform: translateX(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
     h1 {
       font-size: 2rem;
       text-align: center;
@@ -54,7 +78,7 @@
     .search-box {
       display: flex;
       gap: 10px;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     input[type="text"] {
@@ -151,12 +175,15 @@
 <body>
 
   <main class="glass-card">
+    <!-- ルート相対パス（/）でポータルトップを指定 -->
+    <a href="/" class="back-btn">← ポータルトップへ戻る</a>
+
     <h1>WEAT</h1>
     <p class="subtitle">Weather Forecast for Japan</p>
 
     <!-- 都市検索 -->
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="都市名を入力（例: 札幌, 大阪, 福岡）">
+      <input type="text" id="searchInput" placeholder="都市名を入力（例: 札幌, 大阪, 福岡）" onkeydown="if(event.key==='Enter') searchWeather()">
       <button onclick="searchWeather()">検索</button>
     </div>
 
@@ -180,7 +207,7 @@
   </main>
 
   <script>
-    // 天気コードを日本語に変換するマップ
+    // 天気コードマップ
     const weatherCodes = {
       0: "晴れ ☀️",
       1: "ほぼ晴れ 🌤️", 2: "時々曇り ⛅", 3: "曇り ☁️",
@@ -196,7 +223,6 @@
       display.innerHTML = `<p>読み込み中...</p>`;
 
       try {
-        // Open-Meteo API（登録不要・商用可・予報データ対応）
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FTokyo`;
         const res = await fetch(url);
         const data = await res.json();
@@ -215,7 +241,7 @@
       }
     }
 
-    // 地名検索（Geocoding API経由）
+    // 地名検索
     async function searchWeather() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;
@@ -236,7 +262,7 @@
       }
     }
 
-    // 初期表示（東京の天気を自動読み込み）
+    // 初期表示（東京）
     fetchWeather(35.6895, 139.6917, '東京');
   </script>
 </body>
