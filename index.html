@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WEAT - 日本の天気予報</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      /* 桃色（#fbc2eb）から藤色（#a6c1ee）へのグラデーション */
+      background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+      background-attachment: fixed;
+      color: #333;
+      padding: 20px;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 650px;
+      box-shadow: 0 8px 32px 0 rgba(166, 193, 238, 0.37);
+    }
+
+    h1 {
+      font-size: 2rem;
+      text-align: center;
+      color: #222;
+      letter-spacing: 0.05em;
+    }
+
+    p.subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 2rem;
+    }
+
+    /* 検索エリア */
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 0.8rem 1.2rem;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(4px);
+      outline: none;
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    input[type="text"]::placeholder {
+      color: #777;
+    }
+
+    button {
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.6);
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-1px);
+    }
+
+    /* 主要都市ショートカット */
+    .cities-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .city-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .city-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.25);
+      font-size: 0.85rem;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .city-btn:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* 天気結果カード */
+    .weather-result {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .weather-city {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .weather-temp {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin: 0.5rem 0;
+    }
+
+    .weather-desc {
+      font-size: 1rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="glass-card">
+    <h1>WEAT</h1>
+    <p class="subtitle">Weather Forecast for Japan</p>
+
+    <!-- 都市検索 -->
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="都市名を入力（例: 札幌, 大阪, 福岡）">
+      <button onclick="searchWeather()">検索</button>
+    </div>
+
+    <!-- 主要都市ボタン -->
+    <div class="cities-title">主要都市</div>
+    <div class="city-buttons">
+      <button class="city-btn" onclick="fetchWeather(35.6895, 139.6917, '東京')">東京</button>
+      <button class="city-btn" onclick="fetchWeather(34.6937, 135.5023, '大阪')">大阪</button>
+      <button class="city-btn" onclick="fetchWeather(35.1815, 136.9064, '名古屋')">名古屋</button>
+      <button class="city-btn" onclick="fetchWeather(43.0621, 141.3544, '札幌')">札幌</button>
+      <button class="city-btn" onclick="fetchWeather(33.5904, 130.4017, '福岡')">福岡</button>
+      <button class="city-btn" onclick="fetchWeather(26.2124, 127.6809, '沖縄')">沖縄</button>
+    </div>
+
+    <!-- 結果表示枠 -->
+    <div class="weather-result" id="weatherDisplay">
+      <div class="weather-city">東京</div>
+      <div class="weather-temp">-- °C</div>
+      <div class="weather-desc">都市を選択するか検索してください</div>
+    </div>
+  </main>
+
+  <script>
+    // 天気コードを日本語に変換するマップ
+    const weatherCodes = {
+      0: "晴れ ☀️",
+      1: "ほぼ晴れ 🌤️", 2: "時々曇り ⛅", 3: "曇り ☁️",
+      45: "霧 🌫️", 48: "着氷性の霧 🌫️",
+      51: "霧雨 🌧️", 61: "小雨 🌧️", 63: "雨 ☔", 65: "大雨 🌧️",
+      71: "小雪 ❄️", 73: "雪 ❄️", 75: "大雪 ❄️",
+      95: "雷雨 ⚡"
+    };
+
+    // 緯度経度からAPIで天気を取得
+    async function fetchWeather(lat, lon, cityName) {
+      const display = document.getElementById('weatherDisplay');
+      display.innerHTML = `<p>読み込み中...</p>`;
+
+      try {
+        // Open-Meteo API（登録不要・商用可・予報データ対応）
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FTokyo`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const temp = Math.round(data.current_weather.temperature);
+        const code = data.current_weather.weathercode;
+        const condition = weatherCodes[code] || "不明";
+
+        display.innerHTML = `
+          <div class="weather-city">${cityName}</div>
+          <div class="weather-temp">${temp} °C</div>
+          <div class="weather-desc">${condition}</div>
+        `;
+      } catch (err) {
+        display.innerHTML = `<p>データの取得に失敗しました</p>`;
+      }
+    }
+
+    // 地名検索（Geocoding API経由）
+    async function searchWeather() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+
+      try {
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=ja&format=json`;
+        const res = await fetch(geoUrl);
+        const data = await res.json();
+
+        if (data.results && data.results.length > 0) {
+          const place = data.results[0];
+          fetchWeather(place.latitude, place.longitude, place.name);
+        } else {
+          alert('都市が見つかりませんでした。');
+        }
+      } catch (err) {
+        alert('検索エラーが発生しました。');
+      }
+    }
+
+    // 初期表示（東京の天気を自動読み込み）
+    fetchWeather(35.6895, 139.6917, '東京');
+  </script>
+</body>
+</html>
